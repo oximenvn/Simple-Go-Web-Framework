@@ -11,25 +11,21 @@ import (
 	//"syscall"
 )
 
-type database struct {
-	host   string
-	user   string
-	pass   string
-	name   string
-	driver string
-}
-
-type app struct {
-	ENV string
-}
-
 type config struct {
-	database
-	app
+	database struct {
+		host   string
+		user   string
+		pass   string
+		name   string
+		driver string
+	}
+	app struct {
+		ENV string
+	}
 }
 
 var (
-	sysConfig  *config
+	sysConfig  config
 	configLock = new(sync.RWMutex)
 )
 
@@ -42,8 +38,9 @@ func loadConfig(fail bool) {
 		}
 	}
 
-	temp := new(config)
-	if err = json.Unmarshal(file, temp); err != nil {
+	var temp config
+	log.Println(file)
+	if err = json.Unmarshal(file, &temp); err != nil {
 		log.Println("parse config: ", err)
 		if fail {
 			os.Exit(1)
@@ -54,7 +51,7 @@ func loadConfig(fail bool) {
 	configLock.Unlock()
 }
 
-func GetConfig() *config {
+func GetConfig() config {
 	configLock.RLock()
 	defer configLock.RUnlock()
 	return sysConfig
