@@ -1,0 +1,14 @@
+{
+  "config": {
+    "database": {
+      "host":"",
+      "user":"",
+      "pass":"",
+      "name":"",
+      "driver":""
+    },
+    "app": {
+      "ENV":""
+    }
+  }
+}
