@@ -4,12 +4,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
+
+	"./core"
 )
 
 func main() {
@@ -19,6 +23,12 @@ func main() {
 }
 
 func init() {
+	logFile, error := os.OpenFile(time.Now().Format("20060102")+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	core.Check(error)
+	//defer logFile.Close()
+
+	mw := io.MultiWriter(os.Stdout, logFile)
+	log.SetOutput(mw)
 	log.Println("Started. PID:" + strconv.Itoa(os.Getpid()))
 	reloadCmd := flag.NewFlagSet("reload", flag.ExitOnError)
 	pidServer := reloadCmd.Int("pid", 0, "Request server reload configuration")
@@ -61,7 +71,7 @@ func initConfig() {
 			<-s
 			loadConfig(false)
 			log.Println("Reloaded")
-			log.Println(sysConfig.database.host)
+			log.Println(sysConfig)
 		}
 	}()
 }

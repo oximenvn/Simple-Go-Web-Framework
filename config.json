@@ -1,12 +1,12 @@
 {
   "database": {
-    "host":"localhost",
-    "user":"test",
-    "pass":"1234",
-    "name":"",
-    "driver":""
+    "host":"127.0.0.1",
+    "user":"admin",
+    "pass":"12345",
+    "name":"nemixo",
+    "driver":"mysql"
   },
   "app": {
-    "ENV":""
+    "ENV":"dev"
   }
 }
