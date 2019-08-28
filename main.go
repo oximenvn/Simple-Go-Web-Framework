@@ -20,7 +20,7 @@ var version = 0.01
 
 func main() {
 	initConfig()
-	http.HandleFunc("/", welcome)
+	routing()
 	http.ListenAndServe(":8080", nil)
 }
 
