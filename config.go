@@ -1,12 +1,14 @@
 package main
 
-type database struct {
-	host   string
-	user   string
-	pass   string
-	name   string
-	driver string
-}
-type app struct {
-	ENV string
+type Config struct {
+	Database struct {
+		Host   string
+		User   string
+		Pass   string
+		Name   string
+		Driver string
+	}
+	App struct {
+		Env string
+	}
 }
