@@ -16,6 +16,8 @@ import (
 	"./core"
 )
 
+var version = 0.01
+
 func main() {
 	initConfig()
 	http.HandleFunc("/", welcome)
@@ -30,9 +32,12 @@ func init() {
 	mw := io.MultiWriter(os.Stdout, logFile)
 	log.SetOutput(mw)
 	log.Println("Started. PID:" + strconv.Itoa(os.Getpid()))
+
+	flag.Usage = Usage
 	reloadCmd := flag.NewFlagSet("reload", flag.ExitOnError)
 	pidServer := reloadCmd.Int("pid", 0, "Request server reload configuration")
-
+	//helpCmd := flag.NewFlagSet("help", flag.ExitOnError)
+	//versionCmd := flag.NewFlagSet("version", flag.ExitOnError)
 	flag.Parse()
 	//log.Println(os.Args)
 
@@ -46,13 +51,14 @@ func init() {
 		//log.Println("reload ", reloadCmd.Args())
 		sendSignal(*pidServer)
 		os.Exit(1)
-	case "h":
 	case "help":
-		printHelp()
+		Usage()
+		os.Exit(1)
+	case "version":
+		fmt.Fprintln(os.Stdout, "Version:"+strconv.FormatFloat(version, 'f', -1, 32))
 		os.Exit(1)
 	default:
-		printHelp()
-		flag.PrintDefaults()
+		Usage()
 		os.Exit(1)
 	}
 }
@@ -76,8 +82,11 @@ func initConfig() {
 	}()
 }
 
-func printHelp() {
-	fmt.Println("Usage of " + os.Args[0] + ":")
-	fmt.Println("The most commonly used commands are:")
-	fmt.Println(" reload -pid=<PID>   Request server reload configuration")
+var Usage = func() {
+	fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s <command>\n", os.Args[0])
+	fmt.Fprintln(flag.CommandLine.Output(), "\nCommands:")
+	fmt.Fprintln(flag.CommandLine.Output(), "  \033[1mreload\033[0m -pid=<PID>   Request server reload configuration")
+	fmt.Fprintln(flag.CommandLine.Output(), "  \033[1mhelp\033[0m                Display this help and exit")
+	fmt.Fprintln(flag.CommandLine.Output(), "  \033[1mversion\033[0m             Display version information.")
+	flag.PrintDefaults()
 }
