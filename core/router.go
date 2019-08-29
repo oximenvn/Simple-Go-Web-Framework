@@ -3,6 +3,7 @@ package core
 import (
 	"log"
 	"net/http"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -56,6 +57,8 @@ func (r *Router) AddRoute(path string, method string, ac Action) {
 }
 
 var Routes Router
+var re = regexp.MustCompile(`{[0-9a-zA-Z]+}`)
+var substitution = "[0-9A-Za-z]+"
 
 func init() {
 	Routes.init()
@@ -69,10 +72,17 @@ func Routing(w http.ResponseWriter, r *http.Request) {
 	// log.Printf("%+v\n", Routes.ListPath[0])
 	// log.Printf("%+v\n", Routes.ListPath[0].Node)
 	for i := 0; i < len(Routes.ListPath); i++ {
+		// For REST
+		if strings.Count(Routes.ListPath[i].Node, "{") == strings.Count(Routes.ListPath[i].Node, "}") {
+			path := re.ReplaceAllString(str, substitution)
+			// todo
+		}
+		// constant
 		if Routes.ListPath[i].Node == r.URL.Path {
 			if val, ok := Routes.ListPath[i].Method[r.Method]; ok {
 				val(w, r)
 			}
 		}
 	}
+	w.WriteHeader(404)
 }
