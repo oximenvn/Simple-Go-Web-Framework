@@ -73,9 +73,17 @@ func Routing(w http.ResponseWriter, r *http.Request) {
 	// log.Printf("%+v\n", Routes.ListPath[0].Node)
 	for i := 0; i < len(Routes.ListPath); i++ {
 		// For REST
-		if strings.Count(Routes.ListPath[i].Node, "{") == strings.Count(Routes.ListPath[i].Node, "}") {
-			path := re.ReplaceAllString(str, substitution)
-			// todo
+		if strings.Count(Routes.ListPath[i].Node, "{") > 0 {
+			path := "^" + re.ReplaceAllString(Routes.ListPath[i].Node, substitution) + "$"
+			//log.Println(path)
+			//log.Println(r.URL.Path)
+			reg, _ := regexp.Compile(path)
+			if reg.MatchString(r.URL.Path) {
+				if val, ok := Routes.ListPath[i].Method[r.Method]; ok {
+					val(w, r)
+					continue
+				}
+			}
 		}
 		// constant
 		if Routes.ListPath[i].Node == r.URL.Path {

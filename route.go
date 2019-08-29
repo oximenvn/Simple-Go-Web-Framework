@@ -10,7 +10,8 @@ import (
 func init() {
 	core.Routes.AddRoute("/", "get", core.Test.Action)
 	core.Routes.AddRoute("/id", "get", core.Test.Get123)
-	core.Routes.AddRoute("/id/12", "get", core.Test.Asd)
+	core.Routes.AddRoute("/id/{id}", "get", core.Test.Asd)
+	core.Routes.AddRoute("/abc/{stt}/xyz/{ert}/dfg", "get", core.Test.Get123)
 }
 
 func routing(w http.ResponseWriter, r *http.Request) {
