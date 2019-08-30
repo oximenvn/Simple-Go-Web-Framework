@@ -8,3 +8,14 @@
 2019/08/28 11:31:15 21521 user defined signal 2
 2019/08/28 11:31:15 Reloaded
 2019/08/28 11:31:15 {{127.0.0.1 admin 12345 nemixo mysql} {dev}}
+2019/08/28 17:05:06 Started. PID:17562
+2019/08/28 23:39:41 Started. PID:20057
+2019/08/28 23:56:11 Started. PID:21263
+2019/08/28 23:56:43 Started. PID:21291
+2019/08/28 23:56:43 21263 user defined signal 2
+2019/08/28 23:56:43 Reloaded
+2019/08/28 23:56:43 {{127.0.0.1 admin 12345 nemixo mysql} {dev}}
+2019/08/28 23:57:54 Started. PID:21355
+2019/08/28 23:57:54 21263 user defined signal 2
+2019/08/28 23:57:54 Reloaded
+2019/08/28 23:57:54 {{127.0.0.1 admin 12345 oximen mysql} {dev}}

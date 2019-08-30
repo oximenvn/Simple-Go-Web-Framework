@@ -1,0 +1,24 @@
+package core
+
+import (
+	"net/http"
+)
+
+type Route struct {
+	node   string
+	method map[string]Action
+	regex  bool
+}
+
+func doNothing(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func initRoute(path string) Route {
+	m := make(Route)
+	m[path] = map[string]Action
+}
+
+func initRouting(){
+	var Root Path = initPath("")
+}

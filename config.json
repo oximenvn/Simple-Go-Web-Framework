@@ -3,7 +3,7 @@
     "host":"127.0.0.1",
     "user":"admin",
     "pass":"12345",
-    "name":"nemixo",
+    "name":"oximen",
     "driver":"mysql"
   },
   "app": {
