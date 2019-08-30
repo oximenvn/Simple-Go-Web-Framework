@@ -1,6 +1,7 @@
 package core
 
 import (
+	//"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -12,6 +13,9 @@ type Route struct {
 	Node   string
 	Method map[string]Action
 	Regex  bool
+	Middle []MiddleWare
+	// Before []MiddleWare
+	// After  []MiddleWare
 }
 
 type Router struct {
@@ -50,10 +54,25 @@ func (r *Router) AddRoute(path string, method string, ac Action) {
 	//append
 	r.ListPath = append(r.ListPath, Route{})
 	r.ListPath[len(r.ListPath)-1].Node = path
+	// r.ListPath[len(r.ListPath)-1].Before = make([]MiddleWare, 0, 0)
+	// r.ListPath[len(r.ListPath)-1].After = make([]MiddleWare, 0, 0)
+	r.ListPath[len(r.ListPath)-1].Middle = make([]MiddleWare, 0, 0)
 	r.ListPath[len(r.ListPath)-1].Method = make(map[string]Action)
 	r.ListPath[len(r.ListPath)-1].Method[strings.ToUpper(method)] = ac
 	sort.Sort(bySlash(r.ListPath))
 	log.Printf("%+v\n", Routes)
+}
+
+func (r *Router) AddMiddleWare(path string, mid MiddleWare) {
+	for _, v := range r.ListPath {
+		if v.Node == path {
+			v.Middle = append(v.Middle, mid)
+			return
+		}
+	}
+	log.Println("Middleware is not matching.")
+	log.Printf("%+v\n", &mid)
+	panic(mid)
 }
 
 var Routes Router
@@ -80,8 +99,9 @@ func Routing(w http.ResponseWriter, r *http.Request) {
 			reg, _ := regexp.Compile(path)
 			if reg.MatchString(r.URL.Path) {
 				if val, ok := Routes.ListPath[i].Method[r.Method]; ok {
+
 					val(w, r)
-					continue
+					return
 				}
 			}
 		}
@@ -89,6 +109,7 @@ func Routing(w http.ResponseWriter, r *http.Request) {
 		if Routes.ListPath[i].Node == r.URL.Path {
 			if val, ok := Routes.ListPath[i].Method[r.Method]; ok {
 				val(w, r)
+				return
 			}
 		}
 	}
