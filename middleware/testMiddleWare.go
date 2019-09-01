@@ -3,13 +3,17 @@ package middleware
 import (
 	"log"
 	"net/http"
-
-	"../core"
+	"time"
+	// "../core"
 )
 
-type TestBefore core.MiddleWare
+func LoggingHandler(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		t1 := time.Now()
+		next.ServeHTTP(w, r)
+		t2 := time.Now()
+		log.Printf("[%s] %q %v\n", r.Method, r.URL.String(), t2.Sub(t1))
+	}
 
-var ttt TestBefore = TestBefore{Run: func(w http.ResponseWriter, r *http.Request) {
-	log.Println("testBefore")
-	// ttt.Next.Run(w, r)
-}}
+	return http.HandlerFunc(fn)
+}
