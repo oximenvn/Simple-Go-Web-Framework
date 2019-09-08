@@ -8,9 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
 	"time"
 
 	"./core"
@@ -20,7 +18,6 @@ var version = 0.01
 
 func main() {
 	initConfig()
-	//core.InitRouter()
 	http.HandleFunc("/", core.Routing)
 	http.ListenAndServe(":8080", nil)
 }
@@ -62,25 +59,6 @@ func init() {
 		Usage()
 		os.Exit(1)
 	}
-}
-
-func sendSignal(pid int) {
-	log.Println(pid, syscall.SIGUSR2)
-	syscall.Kill(pid, syscall.SIGUSR2)
-}
-
-func initConfig() {
-	loadConfig(true)
-	s := make(chan os.Signal, 1)
-	signal.Notify(s, syscall.SIGUSR2)
-	go func() {
-		for {
-			<-s
-			loadConfig(false)
-			log.Println("Reloaded")
-			log.Println(sysConfig)
-		}
-	}()
 }
 
 var Usage = func() {

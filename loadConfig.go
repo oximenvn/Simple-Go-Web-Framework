@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 )
 
 var (
@@ -38,4 +40,23 @@ func GetConfig() Config {
 	configLock.RLock()
 	defer configLock.RUnlock()
 	return sysConfig
+}
+
+func sendSignal(pid int) {
+	log.Println(pid, syscall.SIGUSR2)
+	syscall.Kill(pid, syscall.SIGUSR2)
+}
+
+func initConfig() {
+	loadConfig(true)
+	s := make(chan os.Signal, 1)
+	signal.Notify(s, syscall.SIGUSR2)
+	go func() {
+		for {
+			<-s
+			loadConfig(false)
+			log.Println("Reloaded")
+			log.Println(sysConfig)
+		}
+	}()
 }
