@@ -1,28 +1,24 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"net/http"
 
+	"./controllers"
 	"./core"
+	"./middleware"
 )
 
 func init() {
-	core.Routes.AddRoute("/", "get", core.Test.Action)
-	core.Routes.AddRoute("/id", "get", core.Test.Get123)
-	core.Routes.AddRoute("/id/{id}", "get", core.Test.Asd)
-	core.Routes.AddRoute("/abc/{stt}/xyz/{ert}/dfg", "get", core.Test.Get123)
-}
+	core.Routes.AddRoute("/", "get", http.HandlerFunc(controller.Test.Action))
 
-func routing(w http.ResponseWriter, r *http.Request) {
-	http.HandleFunc("/", welcome)
-	http.HandleFunc("/asdf", asdf)
-}
+	commonHandlers := core.Middleware(middleware.LoggingHandler)
 
-func welcome(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome!")
-}
+	core.Routes.AddRoute("/id", "get", http.HandlerFunc(controller.Test.Get123))
+	core.Routes.AddRoute("/abc/{stt}/xyz/{ert}/dfg", "get", http.HandlerFunc(controller.Test.Get123))
 
-func asdf(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "asdf!")
+	authenHandlers := commonHandlers.Append(middleware.AuthHandler)
+	core.Routes.AddRoute("/id/{id}", "get", authenHandlers.ThenFunc(controller.Test.Asd))
+
+	// core.Routes.AddMiddleWare("/id", core.MiddleWare(middleware.TestBefore))
 }
