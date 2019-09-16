@@ -18,6 +18,13 @@ var version = 0.01
 
 func main() {
 	initConfig()
+	http.Handle("/static/", //final url can be anything
+		http.StripPrefix("/static/",
+			http.FileServer(http.Dir("static/")))) //Go looks in the relative static directory first, then matches it to a
+	//url of our choice as shown in http.Handle("/static/").
+	//This url is what we need when referencing our css files
+	//once the server begins. Our html code would therefore be <link rel="stylesheet"  href="/static/stylesheet/...">
+	//It is important to note the final url can be whatever we like, so long as we are consistent.
 	http.HandleFunc("/", core.Routing)
 	http.ListenAndServe(":8080", nil)
 }
