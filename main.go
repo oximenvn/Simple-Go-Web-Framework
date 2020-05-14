@@ -76,6 +76,3 @@ var Usage = func() {
 	fmt.Fprintln(flag.CommandLine.Output(), "  \033[1mversion\033[0m             Display version information.")
 	flag.PrintDefaults()
 }
-
-
-//comment
