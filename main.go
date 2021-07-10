@@ -26,7 +26,7 @@ func main() {
 	//once the server begins. Our html code would therefore be <link rel="stylesheet"  href="/static/stylesheet/...">
 	//It is important to note the final url can be whatever we like, so long as we are consistent.
 	http.HandleFunc("/", core.Routing)
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8000", nil)
 }
 
 func init() {
