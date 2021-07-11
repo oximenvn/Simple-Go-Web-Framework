@@ -34,13 +34,11 @@ func (db DataBase) make() {
 	rows, err := tx.Exec(query_create)
 	if err != nil {
 		log.Fatal(err)
-		fmt.Println(err)
 	}
 	fmt.Println(rows)
 	rows, err = tx.Exec(query_use)
 	if err != nil {
 		log.Fatal(err)
-		fmt.Println(err)
 	}
 	fmt.Println(rows)
 
@@ -65,6 +63,18 @@ func (db DataBase) make() {
 		log.Fatalf("unable to connect to database: %v", err)
 		fmt.Println(ctx)
 	}
+}
+
+func (db DataBase) createTable(model interface{}) {
+	fmt.Println("db create ....")
+	s := reflect.ValueOf(&model).Elem()
+	typeOfT := s.Type()
+
+	for i := 0; i < s.NumField(); i++ {
+		f := s.Field(i)
+		fmt.Printf("%d: %s %s = %v\n", i,
+			typeOfT.Field(i).Name, f.Type(), f.Interface())
+	}
 
 }
 
@@ -78,6 +88,7 @@ type Curder interface {
 	insert() BaseModel
 	update() BaseModel
 	delete() BaseModel
+	make()
 }
 
 func (model BaseModel) find() BaseModel {
@@ -92,9 +103,31 @@ func (model BaseModel) find() BaseModel {
 	return BaseModel{}
 }
 
+type Persons struct {
+	BaseModel
+	PersonID  int
+	LastName  string
+	FirstName string
+	Address   string
+	City      string
+}
+
+func (model Persons) find() {
+	s := reflect.ValueOf(&model).Elem()
+	typeOfT := s.Type()
+
+	for i := 0; i < s.NumField(); i++ {
+		f := s.Field(i)
+		fmt.Printf("%d: %s %s = %v\n", i,
+			typeOfT.Field(i).Name, f.Type(), f.Interface())
+	}
+}
+
 func main() {
 	aa := BaseModel{1, "abc"}
 	aa.find()
+	bb := Persons{}
+	//bb.find()
 
 	dsn := "root:123456@tcp(godockerDB:3306)/?charset=utf8"
 
@@ -103,14 +136,12 @@ func main() {
 		log.Fatal(err)
 	}
 	err = db.Ping()
-	// defer sql.Close()
-
-	// rows, err := db.Query("select id, first_name from user limit 10")
-	// if err != nil {
-	//     log.Fatal(err)
-	// }
-	// defer rows.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	godb := DataBase{db, "go_db"}
 	godb.make()
+
+	godb.createTable(bb)
 }

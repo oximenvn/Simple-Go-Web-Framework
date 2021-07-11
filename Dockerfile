@@ -15,6 +15,9 @@ WORKDIR /workspace
 ENV GO111MODULE=off
 
 ADD . .
+
+RUN go get -u github.com/go-sql-driver/mysql
+
 RUN go build -o main .
 RUN sudo chmod -R  777 ./
 # Expose port 8080 to the outside world
