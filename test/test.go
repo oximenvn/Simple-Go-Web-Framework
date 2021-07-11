@@ -68,11 +68,20 @@ func (db DataBase) make() {
 func (db DataBase) createTable(model interface{}) {
 	fmt.Println("db create ....")
 	fmt.Println(model)
-	s := reflect.ValueOf(&model).Elem()
-	typeOfT := s.Type()
+	v := reflect.ValueOf(model)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
 
+	if v.Kind() != reflect.Struct {
+		log.Fatal("unexpected type")
+	}
+
+	s := v.Type()
+	fmt.Println("parse ....")
+	fmt.Println(v)
 	fmt.Println(s)
-	fmt.Println(typeOfT)
+	nameOfT := s.Name()
 
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
@@ -145,7 +154,7 @@ func main() {
 	}
 
 	godb := DataBase{db, "go_db"}
-	godb.make()
+	//godb.make()
 
 	godb.createTable(bb)
 }
