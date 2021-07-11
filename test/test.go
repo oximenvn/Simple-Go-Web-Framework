@@ -67,8 +67,12 @@ func (db DataBase) make() {
 
 func (db DataBase) createTable(model interface{}) {
 	fmt.Println("db create ....")
+	fmt.Println(model)
 	s := reflect.ValueOf(&model).Elem()
 	typeOfT := s.Type()
+
+	fmt.Println(s)
+	fmt.Println(typeOfT)
 
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
