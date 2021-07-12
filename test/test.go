@@ -69,6 +69,14 @@ func (db DataBase) createTable(model interface{}) {
 	fmt.Println("db create ....")
 	fmt.Println(model)
 	v := reflect.ValueOf(model)
+	switch v.Kind() {
+	case reflect.String:
+		fmt.Println(v.String())
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		fmt.Println(v.Int())
+	default:
+		fmt.Printf("unhandled kind %s", v.Kind())
+	}
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
@@ -82,11 +90,14 @@ func (db DataBase) createTable(model interface{}) {
 	fmt.Println(v)
 	fmt.Println(s)
 	nameOfT := s.Name()
+	fmt.Println(nameOfT)
 
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
-		fmt.Printf("%d: %s %s = %v\n", i,
-			typeOfT.Field(i).Name, f.Type(), f.Interface())
+		fmt.Println(f.Name)
+		fmt.Println(f.Type)
+		// fmt.Printf("%d: %s %s = %v\n", i,
+		// 	s.Field(i).Name, f.Type(), f.Interface())
 	}
 
 }
