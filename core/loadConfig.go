@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"encoding/json"
@@ -42,12 +42,12 @@ func GetConfig() Config {
 	return sysConfig
 }
 
-func sendSignal(pid int) {
+func SendSignal(pid int) {
 	log.Println(pid, syscall.SIGUSR2)
 	syscall.Kill(pid, syscall.SIGUSR2)
 }
 
-func initConfig() {
+func init() {
 	loadConfig(true)
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGUSR2)

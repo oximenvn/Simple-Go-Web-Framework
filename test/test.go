@@ -18,51 +18,44 @@ type DataBase struct {
 
 const shortDuration = 1 * time.Second
 
-func (db DataBase) make() {
+func (db DataBase) make() error {
 	fmt.Println("run make")
-
-	// create db
+	var err error
 	query_create := "CREATE DATABASE IF NOT EXISTS " + db.Name
 	query_use := "USE " + db.Name
-	d := time.Now().Add(shortDuration)
-	ctx, cancel := context.WithDeadline(context.Background(), d)
+	deadline := time.Now().Add(shortDuration)
+	ctx, cancel := context.WithDeadline(context.Background(), deadline)
 	defer cancel()
+	// begin transaction
 	tx, err := db.Godb.BeginTx(ctx, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	rows, err := tx.Exec(query_create)
+	// create db if not exists
+	result, err := tx.Exec(query_create)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(rows)
-	rows, err = tx.Exec(query_use)
+	fmt.Println(result)
+	// use this db
+	result, err = tx.Exec(query_use)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(rows)
-
+	fmt.Println(result)
+	// commit transaction
 	err = tx.Commit()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// query := "SELECT *	FROM `help_topic`	LIMIT 50"
-	// rows, err = db.Godb.Query(query)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(rows)
-
-	// ctx, cancel = context.WithTimeout(ctx, 1*time.Second)
-	// defer cancel()
 
 	query_table := "CREATE TABLE Persons (		PersonID int,		LastName varchar(255),		FirstName varchar(255),		Address varchar(255),		City varchar(255)	);"
 	if ctx, err := db.Godb.QueryContext(ctx, query_table); err != nil {
 		log.Fatalf("unable to connect to database: %v", err)
 		fmt.Println(ctx)
 	}
+
+	return err
 }
 
 func (db DataBase) createTable(model interface{}) {
@@ -70,10 +63,14 @@ func (db DataBase) createTable(model interface{}) {
 	fmt.Println(model)
 	v := reflect.ValueOf(model)
 	switch v.Kind() {
+	case reflect.Bool:
+		fmt.Println(v.Bool())
 	case reflect.String:
 		fmt.Println(v.String())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		fmt.Println(v.Int())
+	case reflect.Struct:
+		fmt.Println(v.Type().Name())
 	default:
 		fmt.Printf("unhandled kind %s", v.Kind())
 	}
