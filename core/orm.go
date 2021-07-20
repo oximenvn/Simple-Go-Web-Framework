@@ -12,7 +12,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-const deadline = 1 * time.Second
+const DEADLINE = 1 * time.Second
 
 /* Connect to sql server. Mysql support only */
 func connect() (*sql.DB, error) {
@@ -41,7 +41,7 @@ func createDataBase(db *sql.DB) error {
 	var err error
 	query_create := "CREATE DATABASE IF NOT EXISTS " + db_name
 	query_use := "USE " + db_name
-	deadline := time.Now().Add(deadline)
+	deadline := time.Now().Add(DEADLINE)
 	ctx, cancel := context.WithDeadline(context.Background(), deadline)
 	defer cancel()
 	// begin transaction
@@ -76,7 +76,31 @@ func createDataBase(db *sql.DB) error {
 	return err
 }
 
-/*Parse s struct to a dictionary fields. */
+func getType(a_type reflect.Type) string {
+	switch a_type.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return "int"
+	case reflect.String:
+		return "varchar(255)"
+	case reflect.Bool:
+		return "Boolean"
+	case reflect.Struct:
+		switch a_type.String() {
+		case "time.Time":
+			return "timestamp"
+		default:
+			return ""
+		}
+	default:
+		return ""
+	}
+}
+
+func getTagDb(a_tag reflect.StructTag) string {
+	return a_tag.Get("db")
+}
+
+/*Parse s struct to a CREATE command. */
 func parseStructField(a_struct reflect.StructField) (string, error) {
 	// verify
 	struct_value := reflect.ValueOf(a_struct)
@@ -89,14 +113,39 @@ func parseStructField(a_struct reflect.StructField) (string, error) {
 	struct_name := a_struct.Name
 	struct_tag := a_struct.Tag
 	fmt.Println(struct_name + string(struct_tag))
-
-	return "", nil
+	create_str := "CREATE TABLE " + a_struct.Name + " ("
+	fields_str := ""
+	for i := 0; i < a_struct.Type.NumField(); i++ {
+		f := a_struct.Type.Field(i)
+		fmt.Println(f.Name)
+		fmt.Println(f.Type)
+		fmt.Println(f.Tag)
+		fields_str = fields_str + f.Name + " " + getType(f.Type) + " " + getTagDb(f.Tag) + ","
+		//createATable(db, f)
+		// fmt.Printf("%d: %s %s = %v\n", i,
+		// 	s.Field(i).Name, f.Type(), f.Interface())
+	}
+	fields_str = fields_str[:len(fields_str)-1]
+	last_str := " " + getTagDb(a_struct.Tag) + ");"
+	return create_str + fields_str + last_str, nil
 }
 
 /* Create a table if it is not exist.
 Return a error if it is exist.*/
 func createATable(db *sql.DB, table reflect.StructField) error {
-	parseStructField(table)
+	create_table, err := parseStructField(table)
+	fmt.Println(create_table)
+	if err != nil {
+		return err
+	}
+
+	deadline := time.Now().Add(DEADLINE)
+	ctx, cancel := context.WithDeadline(context.Background(), deadline)
+	defer cancel()
+	if ctx, err := db.QueryContext(ctx, create_table); err != nil {
+		log.Fatalf("unable to connect to database: %v", err)
+		fmt.Println(ctx)
+	}
 	return nil
 }
 
