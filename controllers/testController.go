@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"../core"
+	".."
 )
 
 type testController core.Controller
@@ -37,6 +38,8 @@ func (Test testController) Action(w http.ResponseWriter, r *http.Request) {
 	}
 
 	core.ServeView(w, "views/welcome.html", welcome)
+	abc := models.Tables.Persons{}
+	fmt.Println(abc)
 }
 
 func (Test testController) Asd(w http.ResponseWriter, r *http.Request) {

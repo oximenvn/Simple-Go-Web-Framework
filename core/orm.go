@@ -67,15 +67,10 @@ func createDataBase(db *sql.DB) error {
 		log.Fatal(err)
 	}
 
-	// query_table := "CREATE TABLE Persons (		PersonID int,		LastName varchar(255),		FirstName varchar(255),		Address varchar(255),		City varchar(255)	);"
-	// if ctx, err := db.Godb.QueryContext(ctx, query_table); err != nil {
-	// 	log.Fatalf("unable to connect to database: %v", err)
-	// 	fmt.Println(ctx)
-	// }
-
 	return err
 }
 
+/*Get sql data type for each golang type*/
 func getType(a_type reflect.Type) string {
 	switch a_type.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
@@ -96,6 +91,7 @@ func getType(a_type reflect.Type) string {
 	}
 }
 
+/*get db tag on Tag struct*/
 func getTagDb(a_tag reflect.StructTag) string {
 	return a_tag.Get("db")
 }
@@ -113,7 +109,7 @@ func parseStructField(a_struct reflect.StructField) (string, error) {
 	struct_name := a_struct.Name
 	struct_tag := a_struct.Tag
 	fmt.Println(struct_name + string(struct_tag))
-	create_str := "CREATE TABLE " + a_struct.Name + " ("
+	create_str := "CREATE TABLE IF NOT EXISTS " + a_struct.Name + " ("
 	fields_str := ""
 	for i := 0; i < a_struct.Type.NumField(); i++ {
 		f := a_struct.Type.Field(i)
@@ -121,12 +117,12 @@ func parseStructField(a_struct reflect.StructField) (string, error) {
 		fmt.Println(f.Type)
 		fmt.Println(f.Tag)
 		fields_str = fields_str + f.Name + " " + getType(f.Type) + " " + getTagDb(f.Tag) + ","
-		//createATable(db, f)
-		// fmt.Printf("%d: %s %s = %v\n", i,
-		// 	s.Field(i).Name, f.Type(), f.Interface())
 	}
 	fields_str = fields_str[:len(fields_str)-1]
-	last_str := " " + getTagDb(a_struct.Tag) + ");"
+	last_str := ");"
+	if len(getTagDb(a_struct.Tag)) > 0 {
+		last_str = ", " + getTagDb(a_struct.Tag) + ");"
+	}
 	return create_str + fields_str + last_str, nil
 }
 
@@ -139,12 +135,33 @@ func createATable(db *sql.DB, table reflect.StructField) error {
 		return err
 	}
 
+	config := GetConfig()
+	db_name := config.Database.Name
+	query_use := "USE " + db_name
 	deadline := time.Now().Add(DEADLINE)
 	ctx, cancel := context.WithDeadline(context.Background(), deadline)
 	defer cancel()
-	if ctx, err := db.QueryContext(ctx, create_table); err != nil {
-		log.Fatalf("unable to connect to database: %v", err)
-		fmt.Println(ctx)
+	// begin transaction
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// use this db
+	result, err := tx.Exec(query_use)
+	if err != nil {
+		log.Fatal(err)
+		log.Fatal(result)
+	}
+	// create table
+	result, err = tx.Exec(create_table)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(result)
+	// commit transaction
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
 	}
 	return nil
 }
@@ -164,45 +181,18 @@ func Migrate(tables interface{}) error {
 	// create tables
 	fmt.Println(tables)
 	v := reflect.ValueOf(tables)
-	// switch v.Kind() {
-	// case reflect.Bool:
-	// 	fmt.Println(v.Bool())
-	// case reflect.String:
-	// 	fmt.Println(v.String())
-	// case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-	// 	fmt.Println(v.Int())
-	// case reflect.Struct:
-	// 	fmt.Println(v.Type().Name())
-	// default:
-	// 	fmt.Printf("unhandled kind %s", v.Kind())
-	// }
 	if v.Kind() != reflect.Struct {
 		log.Fatal("unsupport type")
 		return errors.New("tables: it is not the tables")
 	}
-	// if v.Kind() == reflect.Ptr {
-	// 	v = v.Elem()
-	// }
 
-	// if v.Kind() != reflect.Struct {
-	// 	log.Fatal("unexpected type")
-	// }
-	//v = v.Elem()
 	s := v.Type()
-	fmt.Println("parse ....")
-	fmt.Println(v)
-	fmt.Println(s)
-	nameOfT := s.Name()
-	fmt.Println(nameOfT)
-
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
 		fmt.Println(f.Name)
 		fmt.Println(f.Type)
 		fmt.Println(f.Tag)
 		createATable(db, f)
-		// fmt.Printf("%d: %s %s = %v\n", i,
-		// 	s.Field(i).Name, f.Type(), f.Interface())
 	}
 
 	return nil

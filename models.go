@@ -16,6 +16,6 @@ type Tables struct {
 
 	Cars struct {
 		Id  int `db:"NOT NULL AUTO_INCREMENT PRIMARY KEY"`
-		Own int `db:"FOREIGN KEY REFERENCES Persons(Id)"`
+		Own int `db:"REFERENCES Persons(Id)"`
 	} `db:"INDEX cars_idx (Id)"`
 }
