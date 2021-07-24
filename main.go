@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"./core"
+	"github.com/oximenvn/Simple-Go-Web-Framework/core"
 )
 
 var version = 0.01

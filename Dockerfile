@@ -12,14 +12,14 @@ WORKDIR /workspace
 # ARG NODE_VERSION="lts/*"
 # RUN if [ "${INSTALL_NODE}" = "true" ]; then su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
 
-ENV GO111MODULE=off
+ENV GO111MODULE=on
 
 ADD . .
 
 RUN go get -u github.com/go-sql-driver/mysql
 
-RUN go build -o main .
-RUN sudo chmod -R  777 ./
+# RUN go build -o main .
+# RUN sudo chmod -R  777 ./
 # Expose port 8080 to the outside world
 EXPOSE 8000
 

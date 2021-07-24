@@ -4,9 +4,9 @@ import (
 	//"fmt"
 	"net/http"
 
-	"./controllers"
-	"./core"
-	"./middleware"
+	controller "github.com/oximenvn/Simple-Go-Web-Framework/controllers"
+	core "github.com/oximenvn/Simple-Go-Web-Framework/core"
+	middleware "github.com/oximenvn/Simple-Go-Web-Framework/middlewares"
 )
 
 func init() {

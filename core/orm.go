@@ -12,6 +12,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type stype struct {
+	Type  string
+	Value interface{}
+}
+
 const DEADLINE = 1 * time.Second
 
 /* Connect to sql server. Mysql support only */
@@ -195,5 +200,69 @@ func Migrate(tables interface{}) error {
 		createATable(db, f)
 	}
 
+	defer db.Close()
 	return nil
+}
+
+func Save(record interface{}) error {
+	fmt.Println("save record ....")
+	db, err := connect()
+	if err != nil {
+		fmt.Println(db)
+	}
+	defer db.Close()
+
+	fields, err := parse(record)
+	fmt.Println(fields, err)
+
+	return nil
+}
+
+func getValue(f reflect.Value) interface{} {
+	f_value := f.Type()
+	switch f_value.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return f.Int()
+	case reflect.String:
+		return f.String()
+	case reflect.Bool:
+		return f.Bool()
+	case reflect.Struct:
+		switch f_value.String() {
+		case "time.Time":
+			a_time := f.Interface().(time.Time)
+			return a_time.Unix() //time.Unix(f.Int(), 0)
+		default:
+			return ""
+		}
+	default:
+		return ""
+	}
+}
+
+func parse(obj interface{}) (map[string]stype, error) {
+
+	result := make(map[string]stype)
+	// verify
+	struct_value := reflect.ValueOf(obj)
+	if struct_value.Kind() != reflect.Struct {
+		log.Fatal("unsupport type")
+		return result, errors.New("parse: unsupport type")
+	}
+
+	struct_type := struct_value.Type()
+	//struct_name := struct_type.Name()
+	//fmt.Println(struct_name)
+	for i := 0; i < struct_value.NumField(); i++ {
+		f := struct_value.Field(i)
+		v := struct_type.Field(i)
+		// fmt.Println(v.Name)
+		// fmt.Println(f.Type().Name())
+		// fmt.Println(f.Type())
+		// fmt.Println(f)
+		result[v.Name] = stype{getType(f.Type()), getValue(f)}
+
+	}
+
+	return result, nil
 }

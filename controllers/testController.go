@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"time"
 
-	"../core"
-	".."
+	"github.com/oximenvn/Simple-Go-Web-Framework/core"
+	model "github.com/oximenvn/Simple-Go-Web-Framework/models"
 )
 
 type testController core.Controller
@@ -38,8 +38,9 @@ func (Test testController) Action(w http.ResponseWriter, r *http.Request) {
 	}
 
 	core.ServeView(w, "views/welcome.html", welcome)
-	abc := models.Tables.Persons{}
+	abc := model.Persons{}
 	fmt.Println(abc)
+	core.Save(abc)
 }
 
 func (Test testController) Asd(w http.ResponseWriter, r *http.Request) {
