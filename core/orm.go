@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -121,7 +122,7 @@ func parseStructField(a_struct reflect.StructField) (string, error) {
 		fmt.Println(f.Name)
 		fmt.Println(f.Type)
 		fmt.Println(f.Tag)
-		fields_str = fields_str + f.Name + " " + getType(f.Type) + " " + getTagDb(f.Tag) + ","
+		fields_str = fields_str + fmt.Sprintf("%s %s %s,", f.Name, getType(f.Type), getTagDb(f.Tag))
 	}
 	fields_str = fields_str[:len(fields_str)-1]
 	last_str := ");"
@@ -212,9 +213,20 @@ func Save(record interface{}) error {
 	}
 	defer db.Close()
 
-	fields, err := parse(record)
-	fmt.Println(fields, err)
+	name, fields, err := parse(record)
+	fmt.Println(name, fields, err)
 
+	query := "INSERT INTO %s ( %s ) VALUES ( %s);"
+
+	list_name := make([]string, 0, len(fields))
+	list_values := make([]string, 0, len(fields))
+	for k, v := range fields {
+		list_name = append(list_name, k)
+		list_values = append(list_values, fmt.Sprint(v.Value))
+	}
+
+	query = fmt.Sprintf(query, name, strings.Join(list_name, ","), strings.Join(list_values, ","))
+	fmt.Println(query)
 	return nil
 }
 
@@ -231,7 +243,7 @@ func getValue(f reflect.Value) interface{} {
 		switch f_value.String() {
 		case "time.Time":
 			a_time := f.Interface().(time.Time)
-			return a_time.Unix() //time.Unix(f.Int(), 0)
+			return a_time // .Unix() //time.Unix(f.Int(), 0)
 		default:
 			return ""
 		}
@@ -240,18 +252,18 @@ func getValue(f reflect.Value) interface{} {
 	}
 }
 
-func parse(obj interface{}) (map[string]stype, error) {
+func parse(obj interface{}) (string, map[string]stype, error) {
 
 	result := make(map[string]stype)
 	// verify
 	struct_value := reflect.ValueOf(obj)
 	if struct_value.Kind() != reflect.Struct {
 		log.Fatal("unsupport type")
-		return result, errors.New("parse: unsupport type")
+		return "", result, errors.New("parse: unsupport type")
 	}
 
 	struct_type := struct_value.Type()
-	//struct_name := struct_type.Name()
+	struct_name := struct_type.Name()
 	//fmt.Println(struct_name)
 	for i := 0; i < struct_value.NumField(); i++ {
 		f := struct_value.Field(i)
@@ -264,5 +276,5 @@ func parse(obj interface{}) (map[string]stype, error) {
 
 	}
 
-	return result, nil
+	return struct_name, result, nil
 }
