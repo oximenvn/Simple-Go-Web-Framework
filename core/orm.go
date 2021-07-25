@@ -329,7 +329,7 @@ func parse(obj interface{}) (string, map[string]stype, error) {
 	return struct_name, result, nil
 }
 
-func Find(record interface{}) {
+func Finds(record interface{}) error {
 	fmt.Println("find records ....")
 	db, err := connect()
 	if err != nil {
@@ -340,44 +340,69 @@ func Find(record interface{}) {
 	name, fields, err := parse(record)
 	//fmt.Println(name, fields, err)
 
-	query := "SELECT * FROM %s WHERE %s;"
+	query := "SELECT * FROM %s %s;"
 
-	list_name := make([]string, 0, len(fields))
+	// list_name := make([]string, 0, len(fields))
 	list_values := make([]string, 0, len(fields))
 	for k, v := range fields {
-		list_name = append(list_name, k)
-		list_values = append(list_values, toString(v))
+		f_type := reflect.TypeOf(v.Value)
+		v_default := reflect.New(f_type).Elem().Interface()
+		if v_default == v.Value {
+			continue
+		}
+		// list_name = append(list_name, k)
+		condition := k + " = " + toString(v)
+		list_values = append(list_values, condition)
 	}
-
-	query = fmt.Sprintf(query, name, strings.Join(list_name, ","), strings.Join(list_values, ","))
+	where_str := ""
+	if len(list_values) > 0 {
+		where_str = " WHERE " + strings.Join(list_values, ",")
+	}
+	query = fmt.Sprintf(query, name, where_str)
 	fmt.Println(query)
 	// execute query
 	config := GetConfig()
 	db_name := config.Database.Name
 	query_use := "USE " + db_name
-	deadline := time.Now().Add(DEADLINE)
-	ctx, cancel := context.WithDeadline(context.Background(), deadline)
-	defer cancel()
-	// begin transaction
-	tx, err := db.BeginTx(ctx, nil)
+
+	_, err = db.Exec(query_use)
 	if err != nil {
 		log.Fatal(err)
 	}
-	// use this db
-	result, err := tx.Exec(query_use)
+	result, err := db.Query(query)
 	if err != nil {
 		log.Fatal(err)
 	}
-	// insert record
-	result, err = tx.Exec(query)
-	if err != nil {
-		log.Fatal(err)
+	r_type := reflect.TypeOf(record)
+	emp := reflect.New(r_type).Elem().Interface()
+	res := reflect.MakeSlice(reflect.SliceOf(r_type), 0, 0)
+	for result.Next() {
+
+		result.Scan()
 	}
-	fmt.Println(result)
-	// commit transaction
-	err = tx.Commit()
-	if err != nil {
-		log.Fatal(err)
-	}
+	// deadline := time.Now().Add(DEADLINE)
+	// ctx, cancel := context.WithDeadline(context.Background(), deadline)
+	// defer cancel()
+	// // begin transaction
+	// tx, err := db.BeginTx(ctx, nil)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// // use this db
+	// result, err := tx.Exec(query_use)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// // select record
+	// result_r, err := tx.Query(query)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println(result)
+	// // commit transaction
+	// err = tx.Commit()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 	return nil
 }
