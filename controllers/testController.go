@@ -38,9 +38,17 @@ func (Test testController) Action(w http.ResponseWriter, r *http.Request) {
 	}
 
 	core.ServeView(w, "views/welcome.html", welcome)
-	abc := model.Persons{}
-	fmt.Println(abc)
-	core.Save(abc)
+	abc := model.Persons{
+		//Id:         4,
+		Name:       "Thanh",
+		Created_at: time.Now(),
+		Created_by: "Thanh1",
+		Updated_at: time.Now(),
+		Updated_by: "Thanh2",
+	}
+	//fmt.Println(abc)
+	core.Insert(abc)
+	core.Find(model.Persons, {Id: 1})
 }
 
 func (Test testController) Asd(w http.ResponseWriter, r *http.Request) {

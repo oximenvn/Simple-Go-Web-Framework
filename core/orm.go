@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,6 +20,12 @@ type stype struct {
 }
 
 const DEADLINE = 1 * time.Second
+
+const INT = "int"
+const STRING = "varchar(255)"
+const BOOLEAN = "Boolean"
+const TIME = "time.Time"
+const TIMESTAMP = "timestamp"
 
 /* Connect to sql server. Mysql support only */
 func connect() (*sql.DB, error) {
@@ -80,15 +87,15 @@ func createDataBase(db *sql.DB) error {
 func getType(a_type reflect.Type) string {
 	switch a_type.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return "int"
+		return INT
 	case reflect.String:
-		return "varchar(255)"
+		return STRING
 	case reflect.Bool:
-		return "Boolean"
+		return BOOLEAN
 	case reflect.Struct:
 		switch a_type.String() {
-		case "time.Time":
-			return "timestamp"
+		case TIME:
+			return TIMESTAMP
 		default:
 			return ""
 		}
@@ -205,7 +212,7 @@ func Migrate(tables interface{}) error {
 	return nil
 }
 
-func Save(record interface{}) error {
+func Insert(record interface{}) error {
 	fmt.Println("save record ....")
 	db, err := connect()
 	if err != nil {
@@ -214,7 +221,7 @@ func Save(record interface{}) error {
 	defer db.Close()
 
 	name, fields, err := parse(record)
-	fmt.Println(name, fields, err)
+	//fmt.Println(name, fields, err)
 
 	query := "INSERT INTO %s ( %s ) VALUES ( %s);"
 
@@ -222,12 +229,55 @@ func Save(record interface{}) error {
 	list_values := make([]string, 0, len(fields))
 	for k, v := range fields {
 		list_name = append(list_name, k)
-		list_values = append(list_values, fmt.Sprint(v.Value))
+		list_values = append(list_values, toString(v))
 	}
 
 	query = fmt.Sprintf(query, name, strings.Join(list_name, ","), strings.Join(list_values, ","))
 	fmt.Println(query)
+	// execute query
+	config := GetConfig()
+	db_name := config.Database.Name
+	query_use := "USE " + db_name
+	deadline := time.Now().Add(DEADLINE)
+	ctx, cancel := context.WithDeadline(context.Background(), deadline)
+	defer cancel()
+	// begin transaction
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// use this db
+	result, err := tx.Exec(query_use)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// insert record
+	result, err = tx.Exec(query)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(result)
+	// commit transaction
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+	}
 	return nil
+}
+
+func toString(s stype) string {
+	switch s.Type {
+	case INT:
+		return strconv.FormatInt(s.Value.(int64), 10)
+	case STRING:
+		return fmt.Sprintf("'%s'", s.Value.(string))
+	case BOOLEAN:
+		return strconv.FormatBool(s.Value.(bool))
+	case TIMESTAMP:
+		return fmt.Sprintf("'%s'", s.Value.(time.Time).Format("2006-01-02 15:04:05"))
+	default:
+		return ""
+	}
 }
 
 func getValue(f reflect.Value) interface{} {
@@ -277,4 +327,57 @@ func parse(obj interface{}) (string, map[string]stype, error) {
 	}
 
 	return struct_name, result, nil
+}
+
+func Find(record interface{}) {
+	fmt.Println("find records ....")
+	db, err := connect()
+	if err != nil {
+		fmt.Println(db)
+	}
+	defer db.Close()
+
+	name, fields, err := parse(record)
+	//fmt.Println(name, fields, err)
+
+	query := "SELECT * FROM %s WHERE %s;"
+
+	list_name := make([]string, 0, len(fields))
+	list_values := make([]string, 0, len(fields))
+	for k, v := range fields {
+		list_name = append(list_name, k)
+		list_values = append(list_values, toString(v))
+	}
+
+	query = fmt.Sprintf(query, name, strings.Join(list_name, ","), strings.Join(list_values, ","))
+	fmt.Println(query)
+	// execute query
+	config := GetConfig()
+	db_name := config.Database.Name
+	query_use := "USE " + db_name
+	deadline := time.Now().Add(DEADLINE)
+	ctx, cancel := context.WithDeadline(context.Background(), deadline)
+	defer cancel()
+	// begin transaction
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// use this db
+	result, err := tx.Exec(query_use)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// insert record
+	result, err = tx.Exec(query)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(result)
+	// commit transaction
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return nil
 }
