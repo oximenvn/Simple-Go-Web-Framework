@@ -341,10 +341,9 @@ func Finds(record interface{}) error {
 	//fmt.Println(name, fields, err)
 
 	query := "SELECT * FROM %s %s;"
-
-	// list_name := make([]string, 0, len(fields))
 	list_values := make([]string, 0, len(fields))
 	for k, v := range fields {
+		// skip if is default value
 		f_type := reflect.TypeOf(v.Value)
 		v_default := reflect.New(f_type).Elem().Interface()
 		if v_default == v.Value {
@@ -373,36 +372,22 @@ func Finds(record interface{}) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	r_type := reflect.TypeOf(record)
-	emp := reflect.New(r_type).Elem().Interface()
-	res := reflect.MakeSlice(reflect.SliceOf(r_type), 0, 0)
+	// r_type := reflect.TypeOf(record)
+	// emp := reflect.New(r_type).Elem().Interface()
+	// res := reflect.MakeSlice(reflect.SliceOf(r_type), 0, 0)
+
+	list_fields := make([]interface{}, 0, len(fields))
+	for _, v := range fields {
+		list_fields = append(list_fields, &(v.Value))
+	}
+
 	for result.Next() {
 
-		result.Scan()
+		err = result.Scan(list_fields...)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(list_fields)
 	}
-	// deadline := time.Now().Add(DEADLINE)
-	// ctx, cancel := context.WithDeadline(context.Background(), deadline)
-	// defer cancel()
-	// // begin transaction
-	// tx, err := db.BeginTx(ctx, nil)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// // use this db
-	// result, err := tx.Exec(query_use)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// // select record
-	// result_r, err := tx.Query(query)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Println(result)
-	// // commit transaction
-	// err = tx.Commit()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 	return nil
 }
