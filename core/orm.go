@@ -376,13 +376,21 @@ func Finds(record interface{}) error {
 	// emp := reflect.New(r_type).Elem().Interface()
 	// res := reflect.MakeSlice(reflect.SliceOf(r_type), 0, 0)
 
-	list_fields := make([]interface{}, 0, len(fields))
+	list_fields := make([]interface{}, len(fields))
+	list_fields2 := make([]interface{}, len(fields))
+	aaa := make([]string, len(fields))
+	i := 0
 	for _, v := range fields {
-		list_fields = append(list_fields, &(v.Value))
+		list_fields[i] = &aaa[i]
+		list_fields2[i] = (v.Value)
+		i += 1
 	}
 
 	for result.Next() {
-
+		// var Id string
+		// var Name, Created_by, Updated_by string
+		// var Created_at, Update_at string
+		// var aaa [5]string
 		err = result.Scan(list_fields...)
 		if err != nil {
 			fmt.Println(err)
