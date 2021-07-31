@@ -11,9 +11,6 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 *.log
-.vscode/launch.json
-.devcontainer/Dockerfile
-.devcontainer/devcontainer.json
 __debug_bin
 .devcontainer/docker-compose.yml
 .devcontainer/library-scripts/docker-debian.sh

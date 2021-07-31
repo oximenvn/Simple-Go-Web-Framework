@@ -14,7 +14,7 @@ import (
 	"github.com/oximenvn/Simple-Go-Web-Framework/core"
 )
 
-var version = 0.01
+var version = "0.0.2"
 
 func main() {
 	//core.initConfig()
@@ -63,7 +63,7 @@ func init() {
 		Usage()
 		os.Exit(1)
 	case "version":
-		fmt.Fprintln(os.Stdout, "Version:"+strconv.FormatFloat(version, 'f', -1, 32))
+		fmt.Fprintln(os.Stdout, "Version:"+version)
 		os.Exit(1)
 	default:
 		Usage()
