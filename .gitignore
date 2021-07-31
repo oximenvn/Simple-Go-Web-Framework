@@ -11,3 +11,7 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 *.log
+__debug_bin
+.devcontainer/docker-compose.yml
+.devcontainer/library-scripts/docker-debian.sh
+.devcontainer/library-scripts/common-debian.sh

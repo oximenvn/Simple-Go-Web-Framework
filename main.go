@@ -11,13 +11,13 @@ import (
 	"strconv"
 	"time"
 
-	"./core"
+	"github.com/oximenvn/Simple-Go-Web-Framework/core"
 )
 
-var version = 0.01
+var version = "0.0.2"
 
 func main() {
-	initConfig()
+	//core.initConfig()
 	http.Handle("/static/", //final url can be anything
 		http.StripPrefix("/static/",
 			http.FileServer(http.Dir("static/")))) //Go looks in the relative static directory first, then matches it to a
@@ -26,7 +26,7 @@ func main() {
 	//once the server begins. Our html code would therefore be <link rel="stylesheet"  href="/static/stylesheet/...">
 	//It is important to note the final url can be whatever we like, so long as we are consistent.
 	http.HandleFunc("/", core.Routing)
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8000", nil)
 }
 
 func init() {
@@ -54,13 +54,16 @@ func init() {
 	case "reload":
 		reloadCmd.Parse(os.Args[2:])
 		//log.Println("reload ", reloadCmd.Args())
-		sendSignal(*pidServer)
+		core.SendSignal(*pidServer)
+		os.Exit(1)
+	case "migrate":
+		core.Migrate(Tables{})
 		os.Exit(1)
 	case "help":
 		Usage()
 		os.Exit(1)
 	case "version":
-		fmt.Fprintln(os.Stdout, "Version:"+strconv.FormatFloat(version, 'f', -1, 32))
+		fmt.Fprintln(os.Stdout, "Version:"+version)
 		os.Exit(1)
 	default:
 		Usage()
@@ -72,6 +75,7 @@ var Usage = func() {
 	fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s <command>\n", os.Args[0])
 	fmt.Fprintln(flag.CommandLine.Output(), "\nCommands:")
 	fmt.Fprintln(flag.CommandLine.Output(), "  \033[1mreload\033[0m -pid=<PID>   Request server reload configuration")
+	fmt.Fprintln(flag.CommandLine.Output(), "  \033[1mmigrate\033[0m -pid=<PID>  Migrate database")
 	fmt.Fprintln(flag.CommandLine.Output(), "  \033[1mhelp\033[0m                Display this help and exit")
 	fmt.Fprintln(flag.CommandLine.Output(), "  \033[1mversion\033[0m             Display version information.")
 	flag.PrintDefaults()

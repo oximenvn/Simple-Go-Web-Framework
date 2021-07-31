@@ -13,9 +13,6 @@ type Route struct {
 	Node   string
 	Method map[string]http.Handler
 	Regex  bool
-	// Middle []MiddleWare
-	// Before []MiddleWare
-	// After  []MiddleWare
 }
 
 type Router struct {
@@ -54,26 +51,11 @@ func (r *Router) AddRoute(path string, method string, ac http.Handler) {
 	//append
 	r.ListPath = append(r.ListPath, Route{})
 	r.ListPath[len(r.ListPath)-1].Node = path
-	// r.ListPath[len(r.ListPath)-1].Before = make([]MiddleWare, 0, 0)
-	// r.ListPath[len(r.ListPath)-1].After = make([]MiddleWare, 0, 0)
-	// r.ListPath[len(r.ListPath)-1].Middle = make([]MiddleWare, 0, 0)
 	r.ListPath[len(r.ListPath)-1].Method = make(map[string]http.Handler)
 	r.ListPath[len(r.ListPath)-1].Method[strings.ToUpper(method)] = ac
 	sort.Sort(bySlash(r.ListPath))
-	log.Printf("%+v\n", Routes)
+	//log.Printf("%+v\n", Routes)
 }
-
-// func (r *Router) AddMiddleWare(path string, mid MiddleWare) {
-// 	for _, v := range r.ListPath {
-// 		if v.Node == path {
-// 			v.Middle = append(v.Middle, mid)
-// 			return
-// 		}
-// 	}
-// 	log.Println("Middleware is not matching.")
-// 	log.Printf("%+v\n", &mid)
-// 	panic(mid)
-// }
 
 var Routes Router
 var re = regexp.MustCompile(`{[0-9a-zA-Z]+}`)
@@ -81,7 +63,7 @@ var substitution = "[0-9A-Za-z]+"
 
 func init() {
 	Routes.init()
-	log.Printf("%+v\n", Routes)
+	//log.Printf("%+v\n", Routes)
 }
 
 func Routing(w http.ResponseWriter, r *http.Request) {

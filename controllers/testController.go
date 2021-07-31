@@ -10,7 +10,8 @@ import (
 	"net/http"
 	"time"
 
-	"../core"
+	"github.com/oximenvn/Simple-Go-Web-Framework/core"
+	model "github.com/oximenvn/Simple-Go-Web-Framework/models"
 )
 
 type testController core.Controller
@@ -37,6 +38,21 @@ func (Test testController) Action(w http.ResponseWriter, r *http.Request) {
 	}
 
 	core.ServeView(w, "views/welcome.html", welcome)
+	abc := model.Persons{
+		//Id:         4,
+		Name:       "Thanh",
+		Created_at: time.Now(),
+		Created_by: "Thanh1",
+		Updated_at: time.Now(),
+		Updated_by: "Thanh2",
+	}
+	//fmt.Println(abc)
+	core.Insert(abc)
+	he, err := core.Finds(model.Persons{Name: "Thanh"})
+	core.Check(err)
+	they := he.([]model.Persons)
+	fmt.Println(len(they))
+	fmt.Println(they)
 }
 
 func (Test testController) Asd(w http.ResponseWriter, r *http.Request) {
