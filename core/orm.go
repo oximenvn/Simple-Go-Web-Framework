@@ -21,11 +21,13 @@ type stype struct {
 
 const DEADLINE = 1 * time.Second
 
-const INT = "int"
-const STRING = "varchar(255)"
-const BOOLEAN = "Boolean"
-const TIME = "time.Time"
-const TIMESTAMP = "timestamp"
+const (
+	INT       = "int"
+	STRING    = "varchar(255)"
+	BOOLEAN   = "Boolean"
+	TIME      = "time.Time"
+	TIMESTAMP = "timestamp"
+)
 
 /* Connect to sql server. Mysql support only */
 func connect() (*sql.DB, error) {
@@ -42,13 +44,13 @@ func connect() (*sql.DB, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Connect OK.")
+	log.Println("Connect OK.")
 	return db, err
 }
 
 /*Create database if not exist. If it is exist, use it.*/
 func createDataBase(db *sql.DB) error {
-	fmt.Println(" create database...")
+	log.Println(" create database...")
 	config := GetConfig()
 	db_name := config.Database.Name
 	var err error
@@ -63,17 +65,17 @@ func createDataBase(db *sql.DB) error {
 		log.Fatal(err)
 	}
 	// create db if not exists
-	result, err := tx.Exec(query_create)
+	_, err = tx.Exec(query_create)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(result)
+	// fmt.Println(result)
 	// use this db
-	result, err = tx.Exec(query_use)
+	_, err = tx.Exec(query_use)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(result)
+	// fmt.Println(result)
 	// commit transaction
 	err = tx.Commit()
 	if err != nil {
@@ -119,16 +121,16 @@ func parseStructField(a_struct reflect.StructField) (string, error) {
 	}
 
 	//struct_type := a_struct.Type
-	struct_name := a_struct.Name
-	struct_tag := a_struct.Tag
-	fmt.Println(struct_name + string(struct_tag))
+	// struct_name := a_struct.Name
+	// struct_tag := a_struct.Tag
+	// log.Println(struct_name + string(struct_tag))
 	create_str := "CREATE TABLE IF NOT EXISTS " + a_struct.Name + " ("
 	fields_str := ""
 	for i := 0; i < a_struct.Type.NumField(); i++ {
 		f := a_struct.Type.Field(i)
-		fmt.Println(f.Name)
-		fmt.Println(f.Type)
-		fmt.Println(f.Tag)
+		// fmt.Println(f.Name)
+		// fmt.Println(f.Type)
+		// fmt.Println(f.Tag)
 		fields_str = fields_str + fmt.Sprintf("%s %s %s,", f.Name, getType(f.Type), getTagDb(f.Tag))
 	}
 	fields_str = fields_str[:len(fields_str)-1]
@@ -143,7 +145,7 @@ func parseStructField(a_struct reflect.StructField) (string, error) {
 Return a error if it is exist.*/
 func createATable(db *sql.DB, table reflect.StructField) error {
 	create_table, err := parseStructField(table)
-	fmt.Println(create_table)
+	log.Println(create_table)
 	if err != nil {
 		return err
 	}
@@ -170,7 +172,7 @@ func createATable(db *sql.DB, table reflect.StructField) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(result)
+	// fmt.Println(result)
 	// commit transaction
 	err = tx.Commit()
 	if err != nil {
@@ -181,10 +183,10 @@ func createATable(db *sql.DB, table reflect.StructField) error {
 
 /* Migrate all object on Tables struct */
 func Migrate(tables interface{}) error {
-	fmt.Println("db create ....")
+	log.Println("db create ....")
 	db, err := connect()
 	if err != nil {
-		fmt.Println(db)
+		log.Println(db)
 	}
 
 	//create db
@@ -192,7 +194,7 @@ func Migrate(tables interface{}) error {
 	Check(err)
 
 	// create tables
-	fmt.Println(tables)
+	// fmt.Println(tables)
 	v := reflect.ValueOf(tables)
 	if v.Kind() != reflect.Struct {
 		log.Fatal("unsupport type")
@@ -202,9 +204,9 @@ func Migrate(tables interface{}) error {
 	s := v.Type()
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
-		fmt.Println(f.Name)
-		fmt.Println(f.Type)
-		fmt.Println(f.Tag)
+		// fmt.Println(f.Name)
+		// fmt.Println(f.Type)
+		// fmt.Println(f.Tag)
 		createATable(db, f)
 	}
 
@@ -213,10 +215,10 @@ func Migrate(tables interface{}) error {
 }
 
 func Insert(record interface{}) error {
-	fmt.Println("save record ....")
+	log.Println("save record ....")
 	db, err := connect()
 	if err != nil {
-		fmt.Println(db)
+		log.Fatal(db)
 	}
 	defer db.Close()
 
@@ -233,7 +235,7 @@ func Insert(record interface{}) error {
 	}
 
 	query = fmt.Sprintf(query, name, strings.Join(list_name, ","), strings.Join(list_values, ","))
-	fmt.Println(query)
+	log.Println(query)
 	// execute query
 	config := GetConfig()
 	db_name := config.Database.Name
@@ -247,16 +249,16 @@ func Insert(record interface{}) error {
 		log.Fatal(err)
 	}
 	// use this db
-	result, err := tx.Exec(query_use)
+	_, err = tx.Exec(query_use)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// insert record
-	result, err = tx.Exec(query)
+	_, err = tx.Exec(query)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(result)
+	// fmt.Println(result)
 	// commit transaction
 	err = tx.Commit()
 	if err != nil {
@@ -329,36 +331,39 @@ func parse(obj interface{}) (string, map[string]stype, error) {
 	return struct_name, result, nil
 }
 
-func Finds(record interface{}) error {
-	fmt.Println("find records ....")
+func Finds(record interface{}) (interface{}, error) {
+	log.Println("find records ....")
 	db, err := connect()
 	if err != nil {
-		fmt.Println(db)
+		log.Fatal(db)
 	}
 	defer db.Close()
 
 	name, fields, err := parse(record)
 	//fmt.Println(name, fields, err)
 
-	query := "SELECT * FROM %s %s;"
+	query := "SELECT %s FROM %s %s;"
+	list_name := make([]string, 0, len(fields))
 	list_values := make([]string, 0, len(fields))
 	for k, v := range fields {
+		// add colum name
+		list_name = append(list_name, k)
 		// skip if is default value
 		f_type := reflect.TypeOf(v.Value)
 		v_default := reflect.New(f_type).Elem().Interface()
 		if v_default == v.Value {
 			continue
 		}
-		// list_name = append(list_name, k)
 		condition := k + " = " + toString(v)
 		list_values = append(list_values, condition)
 	}
+	select_str := strings.Join(list_name, ",")
 	where_str := ""
 	if len(list_values) > 0 {
 		where_str = " WHERE " + strings.Join(list_values, ",")
 	}
-	query = fmt.Sprintf(query, name, where_str)
-	fmt.Println(query)
+	query = fmt.Sprintf(query, select_str, name, where_str)
+	log.Println(query)
 	// execute query
 	config := GetConfig()
 	db_name := config.Database.Name
@@ -372,18 +377,17 @@ func Finds(record interface{}) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// r_type := reflect.TypeOf(record)
-	// emp := reflect.New(r_type).Elem().Interface()
-	// res := reflect.MakeSlice(reflect.SliceOf(r_type), 0, 0)
+	r_type := reflect.TypeOf(record)
+	res := reflect.MakeSlice(reflect.SliceOf(r_type), 0, 0)
 
 	list_fields := make([]interface{}, len(fields))
-	list_fields2 := make([]interface{}, len(fields))
-	aaa := make([]string, len(fields))
-	i := 0
-	for _, v := range fields {
-		list_fields[i] = &aaa[i]
-		list_fields2[i] = (v.Value)
-		i += 1
+	list_fields2 := make([]string, len(fields))
+	tmp := make([]string, len(fields))
+
+	for i, v := range list_name {
+		list_fields[i] = &tmp[i]
+		list_fields2[i] = v
+
 	}
 
 	for result.Next() {
@@ -393,9 +397,38 @@ func Finds(record interface{}) error {
 		// var aaa [5]string
 		err = result.Scan(list_fields...)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
-		fmt.Println(list_fields)
+		emp := reflect.New(r_type).Elem()
+		for i, v := range list_fields2 {
+			switch fields[v].Type {
+			case INT:
+				number, err := strconv.Atoi(tmp[i])
+				if err != nil {
+					log.Fatal(err)
+				}
+				emp.FieldByName(v).SetInt(int64(number))
+			case STRING:
+				emp.FieldByName(v).SetString(tmp[i])
+			case BOOLEAN:
+				b, err := strconv.ParseBool(tmp[i])
+				if err != nil {
+					log.Fatal(err)
+				}
+				emp.FieldByName(v).SetBool(b)
+			case TIMESTAMP:
+				t, err := time.Parse("2006-01-02 15:04:05", tmp[i])
+				tv := reflect.ValueOf(t)
+				if err != nil {
+					fmt.Println(err)
+				}
+				emp.FieldByName(v).Set(tv)
+			}
+		}
+		// elem := emp.Interface()
+		// log.Println(elem)
+		// fmt.Println(tmp)
+		res = reflect.Append(res, emp)
 	}
-	return nil
+	return res.Interface(), nil
 }

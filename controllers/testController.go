@@ -48,7 +48,11 @@ func (Test testController) Action(w http.ResponseWriter, r *http.Request) {
 	}
 	//fmt.Println(abc)
 	core.Insert(abc)
-	core.Finds(model.Persons{})
+	he, err := core.Finds(model.Persons{Name: "Thanh"})
+	core.Check(err)
+	they := he.([]model.Persons)
+	fmt.Println(len(they))
+	fmt.Println(they)
 }
 
 func (Test testController) Asd(w http.ResponseWriter, r *http.Request) {
