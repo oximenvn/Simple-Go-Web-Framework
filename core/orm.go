@@ -207,7 +207,8 @@ func Migrate(tables interface{}) error {
 		// fmt.Println(f.Name)
 		// fmt.Println(f.Type)
 		// fmt.Println(f.Tag)
-		createATable(db, f)
+		err = createATable(db, f)
+		Check(err)
 	}
 
 	defer db.Close()

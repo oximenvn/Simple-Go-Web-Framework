@@ -25,34 +25,39 @@ type Welcome struct {
 }
 
 func (Test testController) Action(w http.ResponseWriter, r *http.Request) {
-
-	//fmt.Fprintf(w, "Welcome!")
-
 	//Instantiate a Welcome struct object and pass in some random information.
 	//We shall get the name of the user as a query parameter from the URL
-	welcome := Welcome{"Anonymous", time.Now().Format(time.Stamp)}
-
+	welcome := Welcome{"Anonymous", "Now"}
 	//Takes the name from the URL query e.g ?name=Martin, will set welcome.Name = Martin.
-	if name := r.FormValue("name"); name != "" {
-		welcome.Name = name
+	name := r.FormValue("name")
+	if name == "" {
+		core.ServeView(w, "views/welcome.html", welcome)
+		return
 	}
 
-	core.ServeView(w, "views/welcome.html", welcome)
-	abc := model.Persons{
+	temp := model.Persons{
 		//Id:         4,
-		Name:       "Thanh",
+		Name:       name,
 		Created_at: time.Now(),
-		Created_by: "Thanh1",
+		Created_by: "test",
 		Updated_at: time.Now(),
-		Updated_by: "Thanh2",
+		Updated_by: "test",
 	}
-	//fmt.Println(abc)
-	core.Insert(abc)
-	he, err := core.Finds(model.Persons{Name: "Thanh"})
+
+	he, err := core.Finds(model.Persons{Name: name})
 	core.Check(err)
 	they := he.([]model.Persons)
 	fmt.Println(len(they))
-	fmt.Println(they)
+	if len(they) == 0 {
+		core.Insert(temp)
+		welcome.Name = temp.Name
+		welcome.Time = "Now"
+	} else {
+		welcome.Name = they[0].Name
+		welcome.Time = they[0].Created_at.Format(time.Stamp)
+	}
+
+	core.ServeView(w, "views/welcome.html", welcome)
 }
 
 func (Test testController) Asd(w http.ResponseWriter, r *http.Request) {
